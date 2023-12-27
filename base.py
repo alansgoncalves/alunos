@@ -1,50 +1,9 @@
-# Importação de dados csv para o Solr" 📊
-
-Este script Python lê um arquivo CSV contendo dados do aluno, realiza a limpeza de dados usando a biblioteca pandas e insere os dados limpos no Apache Solr. O objetivo é fornecer um exemplo simples de importação de dados para o Solr usando Python.
-
-# Requisitos:
-- Python 3.x
-- pandas
-- pysolr
-- Apache Solr
-
-
-# Configuração core Solr
-1. Acesse o diretório configsets do seu solr:
-   ```bash
-   cd server/solr/configsets
-
-2. Crie um novo diretório dentro de configsets
-   ```bash
-   configsets mkdir search_alunos
-
-3. Copie as definições de configuração do diretório _default
-   ```bash
-   configsets cp -r _default/. search_alunos
-
-4. Acesse o diretório conf de search_alunos
-   ```bash
-   configsets cd search_alunos/conf
-
-5. Rode o comando a seguir para criar o core do Solr usando o conjunto de configurações de search_alunos que acabamos de criar
-   ```bash
-   conf curl -X GET 'http://localhost:8983/solr/admin/cores?action=create&name=search_alunos&instanceDir=configsets/search_alunos'
-
-6. Clone o repositório
-   ```bash
-   git clone https://github.com/alansgoncalves/alunos.git
-   cd alunos
-
-
-# Instalar dependências
-pip install pandas pysolr
-
-
-# Leitura e limpeza de dados
-
-Para realizar a leitura e limpeza dos dados do arquivo aluno.csv, utilizamos a biblioteca pandas:
-```Python
 import pandas as pd
+import pysolr
+import logging
+
+# Configuração de menasagens de log
+logging.basicConfig(filename='import_to_solr.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Função para leitura e limpeza dos dados do arquivo CSV
 def read_and_clean_csv(csv_file):
@@ -61,15 +20,13 @@ def read_and_clean_csv(csv_file):
 
     # Coverte os dados da coluna 'Data de Nascimento' para tipo datetime
     df['Data de Nascimento'] = pd.to_datetime(df['Data de Nascimento'], errors='coerce')
+    
+    # Log para limpeza de dados
+    logging.info('Limpeza de dados concluída com sucesso!')
 
     return df
-```
 
-Após a limpeza dos dados, é feito o envio das informações para o core do Solr utilizando a biblioteca pysolr
-```Python
-import pysolr
-
-# Função para inserir os dados CSV no core do Solr
+# Função para inserir os dados CSV para core do Solr
 def insert_into_solr(data):
     solr_url = 'http://localhost:8983/solr'  # Variável que armazena URL de acesso ao Solr
     solr_core = 'search_alunos'  # Variável que armazena o nome do core Solr
@@ -96,18 +53,25 @@ def insert_into_solr(data):
 
         # Insere os dados no Solr
         solr.add([solr_data])
-```
+        
+        # Log de progresso para cada registro inserido no Solr
+        logging.info(f'Dados para {row["Nome"]} inserido no Solr')
 
-Por último, condição que garante que as funções sejam chamadas na ordem correta: 
-Leitura do arquivo CSV, limpeza dos dados e inserção dos dados limpos no Solr
-```Python
+# Condição que garante que as funções necessárias sejam chamadas na ordem correta:
+# Leitura do arquivo CSV, limpeza dos dados e inserção dos dados limpos no Solr
+# Só será executado se o script estiver sendo executado diretamente.
 if __name__ == '__main__':
     # Variável que armazena o arquivo aluno.csv
-    csv_file = 'aluno.csv'
+    csv_file = './csv/aluno.csv'
+    
+    # Log de início de execução
+    logging.info('Script de execução iniciado!')
 
-    # Variável que aplica a função read_and_clean_csv ao arquivo csv
+    # Variável que aplica a função read_and_clean_csv Read ao arquivo csv
     cleaned_data = read_and_clean_csv(csv_file)
 
     # Chama a função insert_into_solr para inserir os dados limpos no Solr
     insert_into_solr(cleaned_data)
-```
+    
+    # Log de execução completa
+    logging.info('Script de execução completo!')

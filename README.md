@@ -103,7 +103,7 @@ Leitura do arquivo CSV, limpeza dos dados e inserção dos dados limpos no Solr
 ```Python
 if __name__ == '__main__':
     # Variável que armazena o arquivo aluno.csv
-    csv_file = 'aluno.csv'
+    csv_file = './csv/aluno.csv'
 
     # Variável que aplica a função read_and_clean_csv ao arquivo csv
     cleaned_data = read_and_clean_csv(csv_file)
